@@ -9,7 +9,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day1();
+        Day2(true);
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -17,7 +17,8 @@ class Program
 
     static string[] ReadInput(int dayNumber)
     {
-        return File.ReadAllLines(@"C:\Users\Fezum\RiderProjects\Advent-of-Code-2025\Advent-of-Code-2025\Input\Day" + dayNumber + ".txt");
+        return File.ReadAllLines(@"C:\Users\Fezum\RiderProjects\Advent-of-Code-2025\Advent-of-Code-2025\Input\Day" +
+                                 dayNumber + ".txt");
     }
 
     static void Day1()
@@ -37,10 +38,55 @@ class Program
                 value %= 100;
                 if (value == 0) amount0_part2++;
             }
+
             if (value == 0) amount0++;
         }
 
         Console.WriteLine(amount0);
         Console.WriteLine("Part 2: {0}", amount0_part2);
+    }
+
+    static void Day2(bool part2 = false)
+    {
+        var ranges = ReadInput(2)[0]
+            .Split(',')
+            .Select(r =>
+                (
+                    long.Parse(r.Split('-')[0]),
+                    long.Parse(r.Split('-')[1])
+                )
+            );
+
+        long sum = 0;
+        foreach (var (lower, upper) in ranges)
+        {
+            for (long i = lower; i <= upper; i++)
+            {
+                var str = i.ToString();
+                if (part2)
+                {
+                    for (int subpart = 1; subpart <= str.Length / 2; subpart++)
+                    {
+                        if (str.Length % subpart != 0) continue;
+                        var part = str[..subpart];
+                        if (str == string.Concat(Enumerable.Repeat(part, str.Length / subpart)))
+                        {
+                            sum += i;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    if (str.Length % 2 != 0) continue;
+                    var firstHalf = str[..(str.Length / 2)];
+
+                    if (str.EndsWith(firstHalf))
+                        sum += i;
+                }
+            }
+        }
+
+        Console.WriteLine(sum);
     }
 }
