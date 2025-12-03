@@ -9,7 +9,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day2(true);
+        Day3();
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -88,5 +88,39 @@ class Program
         }
 
         Console.WriteLine(sum);
+    }
+
+    static void Day3()
+    {
+        var packs = ReadInput(3);
+        long sum = 0;
+        long sum2 = 0;
+        foreach (var pack in packs)
+        {
+            sum += HighestPossible(pack, 2);
+            sum2 += HighestPossible(pack, 12);
+        }
+
+        Console.WriteLine(sum);
+        Console.WriteLine("Part 2: {0}", sum2);
+        return;
+
+        long HighestPossible(string digits, int digitsToGrab)
+        {
+            long number = 0;
+            for (int i = digitsToGrab; i > 0; i--)
+            {
+                char bestDigit = digits[..^(i - 1)]
+                    .Select(d => int.Parse(d.ToString()))
+                    .Max()
+                    .ToString()
+                    .First();
+                var index = digits.IndexOf(bestDigit, StringComparison.Ordinal);
+                long newAdd = int.Parse(bestDigit.ToString()) * (long)Math.Pow(10, i - 1);
+                digits = digits[(index + 1)..];
+                number += + newAdd;
+            }
+            return number;
+        }
     }
 }
