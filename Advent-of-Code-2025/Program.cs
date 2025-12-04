@@ -9,7 +9,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day3();
+        Day4(true);
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -122,5 +122,73 @@ class Program
             }
             return number;
         }
+    }
+
+    static void Day4(bool part2 = false)
+    {
+        var grid = ReadInput(4).Select(line => line.ToString().Select(c => c == '@').ToArray()).ToArray();
+
+        var amount = 0;
+
+        if (part2)
+        {
+            var removedLastCycle = true;
+            while (removedLastCycle)
+            {
+                removedLastCycle = false;
+                for (var y = 0; y < grid.Length; y++)
+                {
+                    for (var x = 0; x < grid[0].Length; x++)
+                    {
+                        if (!grid[y][x]) continue;
+                        var blocked = 0;
+                        for (var diffX = -1; diffX <= 1; diffX++)
+                        {
+                            for (var diffY = -1; diffY <= 1; diffY++)
+                            {
+                                if (x + diffX < 0 ||
+                                    x + diffX >= grid[0].Length ||
+                                    y + diffY < 0 ||
+                                    y + diffY >= grid.Length) continue;
+                                if (diffX == 0 && diffY == 0) continue;
+                                blocked += grid[y + diffY][x + diffX] ? 1 : 0;
+                            }
+                        }
+
+                        if (blocked < 4)
+                        {
+                            amount++;
+                            grid[y][x] = false;
+                            removedLastCycle = true;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (var y = 0; y < grid.Length; y++)
+            {
+                for (var x = 0; x < grid[0].Length; x++)
+                {
+                    if (!grid[y][x]) continue;
+                    var blocked = 0;
+                    for (var diffX = -1; diffX <= 1; diffX++)
+                    {
+                        for (var diffY = -1; diffY <= 1; diffY++)
+                        {
+                            if (x + diffX < 0 || x + diffX >= grid[0].Length || y + diffY < 0 ||
+                                y + diffY >= grid.Length) continue;
+                            if (diffX == 0 && diffY == 0) continue;
+                            blocked += grid[y + diffY][x + diffX] ? 1 : 0;
+                        }
+                    }
+
+                    if (blocked < 4) amount++;
+                }
+            }
+        }
+
+        Console.WriteLine(amount);
     }
 }
