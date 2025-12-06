@@ -9,7 +9,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day4(true);
+        Day5();
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -190,5 +190,74 @@ class Program
         }
 
         Console.WriteLine(amount);
+    }
+
+    static void Day5()
+    {
+        var input = ReadInput(5);
+
+        List<(long, long)> ranges = [];
+        int amount = 0;
+
+        foreach (var line in input)
+        {
+            if (line.Contains('-'))
+            {
+                ranges.Add((long.Parse(line.Split('-')[0]), long.Parse(line.Split('-')[1])));
+            }
+            else if (line != "")
+            {
+                var number = long.Parse(line);
+                if (ranges.Any(r => r.Item1 <= number && number <= r.Item2)) amount++;
+            }
+        }
+
+        Console.WriteLine(amount);
+
+        ranges.Sort((a, b) => a.Item1.CompareTo(b.Item1));
+
+        bool changeDone = true;
+        while (changeDone)
+        {
+            changeDone = false;
+            foreach (var (lower, upper) in ranges)
+            {
+                var otherRanges = ranges.Where(r => r != (lower, upper)).ToList();
+
+                if (otherRanges.Any(r => r.Item1 <= lower && r.Item2 >= upper))
+                {
+                    ranges.Remove((lower, upper));
+                    changeDone = true;
+                    break;
+                }
+
+                var lowerOverlap = otherRanges.FirstOrDefault(r => lower >= r.Item1 && lower <= r.Item2, (-1, -1));
+                var upperOverlap = otherRanges.FirstOrDefault(r => upper >= r.Item1 && upper <= r.Item2, (-1, -1));
+                if (lowerOverlap != (-1, -1))
+                {
+                    ranges.Remove(lowerOverlap);
+                    ranges.Remove((lower, upper));
+                    changeDone = true;
+                    ranges.Add((lowerOverlap.Item1, upper));
+                    break;
+                }
+
+                if (upperOverlap != (-1, -1))
+                {
+                    ranges.Remove(upperOverlap);
+                    ranges.Remove((lower, upper));
+                    changeDone = true;
+                    ranges.Add((lower, upperOverlap.Item2));
+                    break;
+                }
+            }
+        }
+
+        // ranges.ForEach(r => Console.WriteLine(r.Item1 + "-" + r.Item2));
+
+        var amount2 = 0L;
+        foreach (var (lower, upper) in ranges) amount2 += upper - lower + 1;
+
+        Console.WriteLine("Part 2: {0}", amount2);
     }
 }
