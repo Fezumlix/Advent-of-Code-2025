@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Advent_of_Code_2025;
 
@@ -9,7 +10,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day5();
+        Day6Part2();
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -118,8 +119,9 @@ class Program
                 var index = digits.IndexOf(bestDigit, StringComparison.Ordinal);
                 long newAdd = int.Parse(bestDigit.ToString()) * (long)Math.Pow(10, i - 1);
                 digits = digits[(index + 1)..];
-                number += + newAdd;
+                number += +newAdd;
             }
+
             return number;
         }
     }
@@ -259,5 +261,79 @@ class Program
         foreach (var (lower, upper) in ranges) amount2 += upper - lower + 1;
 
         Console.WriteLine("Part 2: {0}", amount2);
+    }
+
+    static void Day6()
+    {
+        var input = ReadInput(6);
+        List<long[]> numbers = input[..^1]
+            .Select(line =>
+                Regex.Matches(line, @"\d+")
+                    .Select(m => long.Parse(m.Value))
+                    .ToArray())
+            .ToList();
+
+        bool[] isAddition = Regex.Matches(input[^1], "[+*]").Select(c => c.Value == "+").ToArray();
+
+        long sum = 0;
+        for (int i = 0; i < isAddition.Length; i++)
+        {
+            if (isAddition[i])
+            {
+                Console.WriteLine($"{string.Join(" + ", numbers.Select(n => n[i].ToString()))} = {numbers.Select(n => n[i]).Sum()}");
+                sum += numbers.Select(n => n[i]).Sum();
+            }
+            else
+            {
+                Console.WriteLine($"{string.Join(" * ", numbers.Select(n => n[i].ToString()))} = {numbers.Select(n => n[i]).Aggregate((a, b) => a * b)}");
+                sum += numbers.Select(n => n[i]).Aggregate((a, b) => a * b);
+            }
+        }
+
+        Console.WriteLine(sum);
+    }
+
+    static void Day6Part2()
+    {
+        var input = ReadInput(6);
+        int maxLength = input.Select(line => line.Length).Max();
+        for (int i = 0; i < input.Length - 1; i++)
+        {
+            input[i] = input[i].PadRight(maxLength);
+        }
+        input[^1] = input[^1].PadRight(maxLength + 1);
+
+        bool[] isAddition = Regex.Matches(input[^1], "[+*]").Select(c => c.Value == "+").ToArray();
+        int[] lengths = Regex.Matches(input[^1], @"\s+").Select(str => str.Length).ToArray();
+
+        List<long[]> numbers = [];
+        for (int i = 0; i < lengths.Length; i++)
+        {
+            int startIndex = lengths[..i].Sum() + i;
+            int endIndex = startIndex + lengths[i];
+            var n = new long[endIndex - startIndex];
+            for (int j = startIndex; j < endIndex; j++)
+            {
+                n[j - startIndex] = long.Parse(input[..^1].Select(line => line[j].ToString()).Aggregate((a, b) => a + b));
+                Console.WriteLine(n[j - startIndex]);
+            }
+            numbers.Add(n);
+        }
+
+        long sum = 0;
+        for (int i = 0; i < isAddition.Length; i++)
+        {
+            if (isAddition[i])
+            {
+                sum += numbers[i].Sum();
+            }
+            else
+            {
+                sum += numbers[i].Aggregate((a, b) => a * b);
+            }
+        }
+        Console.WriteLine(sum);
+
+        // 11299263623062
     }
 }
