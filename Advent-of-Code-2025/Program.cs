@@ -10,7 +10,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day6Part2();
+        Day7Part2();
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -280,12 +280,14 @@ class Program
         {
             if (isAddition[i])
             {
-                Console.WriteLine($"{string.Join(" + ", numbers.Select(n => n[i].ToString()))} = {numbers.Select(n => n[i]).Sum()}");
+                Console.WriteLine(
+                    $"{string.Join(" + ", numbers.Select(n => n[i].ToString()))} = {numbers.Select(n => n[i]).Sum()}");
                 sum += numbers.Select(n => n[i]).Sum();
             }
             else
             {
-                Console.WriteLine($"{string.Join(" * ", numbers.Select(n => n[i].ToString()))} = {numbers.Select(n => n[i]).Aggregate((a, b) => a * b)}");
+                Console.WriteLine(
+                    $"{string.Join(" * ", numbers.Select(n => n[i].ToString()))} = {numbers.Select(n => n[i]).Aggregate((a, b) => a * b)}");
                 sum += numbers.Select(n => n[i]).Aggregate((a, b) => a * b);
             }
         }
@@ -301,6 +303,7 @@ class Program
         {
             input[i] = input[i].PadRight(maxLength);
         }
+
         input[^1] = input[^1].PadRight(maxLength + 1);
 
         bool[] isAddition = Regex.Matches(input[^1], "[+*]").Select(c => c.Value == "+").ToArray();
@@ -314,9 +317,11 @@ class Program
             var n = new long[endIndex - startIndex];
             for (int j = startIndex; j < endIndex; j++)
             {
-                n[j - startIndex] = long.Parse(input[..^1].Select(line => line[j].ToString()).Aggregate((a, b) => a + b));
+                n[j - startIndex] =
+                    long.Parse(input[..^1].Select(line => line[j].ToString()).Aggregate((a, b) => a + b));
                 Console.WriteLine(n[j - startIndex]);
             }
+
             numbers.Add(n);
         }
 
@@ -332,8 +337,159 @@ class Program
                 sum += numbers[i].Aggregate((a, b) => a * b);
             }
         }
+
         Console.WriteLine(sum);
 
         // 11299263623062
     }
+
+    static void Day7()
+    {
+        var input = ReadInput(7);
+        HashSet<(int, int)> currentBeams =
+        [
+            (input[0].IndexOf('S'), 0),
+        ];
+
+        var splitAmount = 0;
+        var currentDepth = 0;
+
+        for (; currentDepth < input.Length; currentDepth++)
+        {
+            foreach (var beam in currentBeams.Where(b => b.Item2 == currentDepth).ToList())
+            {
+                switch (input[beam.Item2][beam.Item1])
+                {
+                    case '.':
+                    case 'S':
+                        currentBeams.Add((beam.Item1, beam.Item2 + 1));
+                        break;
+                    case '^':
+                        currentBeams.Add((beam.Item1 + 1, beam.Item2 + 1));
+                        currentBeams.Add((beam.Item1 - 1, beam.Item2 + 1));
+                        splitAmount++;
+                        Console.WriteLine("Split at: ({0}, {1})", beam.Item1, beam.Item2);
+                        break;
+                }
+            }
+        }
+
+        Console.WriteLine(splitAmount);
+    }
+
+    static void Day7Part2Broken()
+    {
+        var input = ReadInput(7);
+        var depth = input.Length;
+
+        var amountOfTimelines = 0;
+        ContinueDown((input[0].IndexOf('S'), 0));
+
+        void ContinueDown((int, int) beam)
+        {
+            if (beam.Item2 == depth)
+            {
+                amountOfTimelines++;
+                if (amountOfTimelines % 1000000 == 0)
+                    Console.WriteLine(amountOfTimelines);
+                return;
+            }
+
+            if (input[beam.Item2][beam.Item1] == '^')
+            {
+                ContinueDown((beam.Item1 + 1, beam.Item2));
+                ContinueDown((beam.Item1 - 1, beam.Item2));
+            }
+            else
+            {
+                ContinueDown((beam.Item1, beam.Item2 + 1));
+            }
+        }
+
+        Console.WriteLine(amountOfTimelines);
+    }
+
+    static void Day7Part2()
+    {
+        var input = ReadInput(7);
+        List<Beam> currentBeams =
+        [
+            new()
+            {
+                X = input[0].IndexOf('S'),
+                Y = 0,
+                Thickness = 1,
+            },
+        ];
+
+        var currentDepth = 0;
+
+        for (; currentDepth < input.Length; currentDepth++)
+        {
+            foreach (var beam in currentBeams.ToList())
+            {
+                switch (input[beam.Y][beam.X])
+                {
+                    case '.':
+                    case 'S':
+                        var nextBeam = currentBeams.Find(b => b.X == beam.X && b.Y == beam.Y + 1);
+                        if (nextBeam == null)
+                            beam.Y++;
+                        else
+                        {
+                            nextBeam.Thickness += beam.Thickness;
+                            currentBeams.Remove(beam);
+                        }
+                        break;
+                    case '^':
+                        nextBeam = currentBeams.Find(b => b.X == beam.X + 1 && b.Y == beam.Y + 1);
+                        if (nextBeam == null)
+                        {
+                            currentBeams.Add(
+                                new Beam
+                                {
+                                    X = beam.X + 1,
+                                    Y = beam.Y + 1,
+                                    Thickness = beam.Thickness,
+                                });
+                            currentBeams.Remove(beam);
+                        }
+                        else
+                        {
+                            nextBeam.Thickness += beam.Thickness;
+                            currentBeams.Remove(beam);
+                        }
+
+                        nextBeam = currentBeams.Find(b => b.X == beam.X - 1 && b.Y == beam.Y + 1);
+                        if (nextBeam == null)
+                        {
+                            currentBeams.Add(
+                                new Beam
+                                {
+                                    X = beam.X - 1,
+                                    Y = beam.Y + 1,
+                                    Thickness = beam.Thickness,
+                                });
+                            currentBeams.Remove(beam);
+                        }
+                        else
+                        {
+                            nextBeam.Thickness += beam.Thickness;
+                            currentBeams.Remove(beam);
+                        }
+                        break;
+                }
+            }
+        }
+
+        Console.WriteLine(currentBeams.Sum(b => b.Thickness));
+    }
+}
+
+class Beam
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+
+    public long Thickness { get; set; }
 }
