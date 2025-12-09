@@ -10,7 +10,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day7Part2();
+        Day8(true);
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -440,6 +440,7 @@ class Program
                             nextBeam.Thickness += beam.Thickness;
                             currentBeams.Remove(beam);
                         }
+
                         break;
                     case '^':
                         nextBeam = currentBeams.Find(b => b.X == beam.X + 1 && b.Y == beam.Y + 1);
@@ -477,12 +478,75 @@ class Program
                             nextBeam.Thickness += beam.Thickness;
                             currentBeams.Remove(beam);
                         }
+
                         break;
                 }
             }
         }
 
         Console.WriteLine(currentBeams.Sum(b => b.Thickness));
+    }
+
+    static void Day8(bool part2 = false)
+    {
+        var input = ReadInput(8);
+        var positions = input
+            .Select(line => line
+                .Split(','))
+            .Select(coords => new Vector3Int(
+                    int.Parse(coords[0]),
+                    int.Parse(coords[1]),
+                    int.Parse(coords[2])
+                )
+            ).ToList();
+
+        var connections = positions
+            .SelectMany(p => positions.Where(q => q != p), (a, b) => (a, b))
+            .Select(t => (t.Item1, t.Item2, Vector3Int.Distance(t.Item1, t.Item2)))
+            .OrderBy(t => t.Item3)
+            .ToList();
+
+        // remove duplicate connections
+        connections = connections.GroupBy(t => t.Item3).Select(g => g.First()).ToList();
+
+        var circuits = positions.Select(p => new List<Vector3Int> { p }).ToList();
+
+        var limit = part2 ? int.MaxValue : input.Length == 20 ? 10 : 1000;
+
+        for (var index = 0; index < limit; index++)
+        {
+            var (a, b, distance) = connections[index];
+            // Skip if both a and b already belong to the same circuit
+            if (circuits.Any(c => c.Contains(a) && c.Contains(b))) continue;
+
+            // Find the circuits containing a and b
+            var circuitWithA = circuits.Find(c => c.Contains(a));
+            var circuitWithB = circuits.Find(c => c.Contains(b));
+
+            if (part2 && circuits.Count == 2)
+            {
+                // ReSharper disable once RedundantCast
+                Console.WriteLine("Part 2: {0}", (long)a.X * (long)b.X);
+                // 8199963486
+                return;
+            }
+
+            // Ensure both circuits exist before proceeding
+            if (circuitWithA != null && circuitWithB != null && circuitWithA != circuitWithB)
+            {
+                Console.WriteLine("Connecting {0} and {1}", a, b);
+                circuits.Remove(circuitWithB);
+                circuitWithA.AddRange(circuitWithB);
+            }
+            else
+            {
+                Console.WriteLine("Error: Circuit not found for {0} and {1}", a, b);
+                break;
+            }
+        }
+
+        Console.WriteLine(circuits.Select(c => c.Count).Order().Reverse().Take(3).Aggregate((a, b) => a * b));
+        // 26400
     }
 }
 
@@ -492,4 +556,50 @@ class Beam
     public int Y { get; set; }
 
     public long Thickness { get; set; }
+}
+
+class Vector3Int(int x, int y, int z)
+{
+    public int X { get; set; } = x;
+    public int Y { get; set; } = y;
+    public int Z { get; set; } = z;
+
+    private Vector3Int(Vector3Int v) : this(v.X, v.Y, v.Z)
+    {
+    }
+
+    public Vector3Int Clone()
+    {
+        return new Vector3Int(this);
+    }
+
+    public override string ToString()
+    {
+        return $"({X}, {Y}, {Z})";
+    }
+
+    public static Vector3Int operator +(Vector3Int a, Vector3Int b)
+    {
+        return new Vector3Int(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+    }
+
+    public static Vector3Int operator -(Vector3Int a, Vector3Int b)
+    {
+        return new Vector3Int(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+    }
+
+    public static Vector3Int operator *(Vector3Int a, int scalar)
+    {
+        return new Vector3Int(a.X * scalar, a.Y * scalar, a.Z * scalar);
+    }
+
+    public static Vector3Int operator /(Vector3Int a, int scalar)
+    {
+        return new Vector3Int(a.X / scalar, a.Y / scalar, a.Z / scalar);
+    }
+
+    public static double Distance(Vector3Int a, Vector3Int b)
+    {
+        return Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2));
+    }
 }
