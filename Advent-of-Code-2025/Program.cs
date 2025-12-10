@@ -10,7 +10,7 @@ class Program
         // run todays method
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        Day8(true);
+        Day9();
         stopwatch.Stop();
         Console.WriteLine("-----------------------------------\n" +
                           "Runtime: " + stopwatch.Elapsed);
@@ -548,6 +548,50 @@ class Program
         Console.WriteLine(circuits.Select(c => c.Count).Order().Reverse().Take(3).Aggregate((a, b) => a * b));
         // 26400
     }
+
+    static void Day9()
+    {
+        var points = ReadInput(9)
+            .Select(line => line.Split(',').Select(int.Parse).ToArray())
+            .Select(coords => new Vector2Int(coords[0], coords[1]))
+            .ToList();
+
+        var pairs = points
+            .SelectMany(p => points.Where(q => q != p), (a, b) => (a, b));
+
+        var highestArea = pairs
+            .Select(pair => (long)(Math.Abs(pair.a.X - pair.b.X) + 1) * (long)(Math.Abs(pair.a.Y - pair.b.Y) + 1))
+            .Max();
+
+        var pairsPart2 = pairs.Where(pair =>
+        {
+            foreach (var point in points)
+            {
+                if (point.X < pair.a.X && point.X > pair.b.X && point.Y < pair.a.Y && point.Y > pair.b.Y ||
+                    point.X > pair.a.X && point.X < pair.b.X && point.Y > pair.a.Y && point.Y < pair.b.Y ||
+                    point.X < pair.a.X && point.X > pair.b.X && point.Y > pair.a.Y && point.Y < pair.b.Y ||
+                    point.X > pair.a.X && point.X < pair.b.X && point.Y < pair.a.Y && point.Y > pair.b.Y)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        var highestAreaPart2 = pairsPart2
+            .Select(pair => (long)(Math.Abs(pair.a.X - pair.b.X) + 1) * (long)(Math.Abs(pair.a.Y - pair.b.Y) + 1))
+            .Max();
+        // broken
+
+        Console.WriteLine(highestArea);
+        Console.WriteLine("Part 2: {0}", highestAreaPart2);
+    }
+
+    static void Day10()
+    {
+
+    }
 }
 
 class Beam
@@ -556,50 +600,4 @@ class Beam
     public int Y { get; set; }
 
     public long Thickness { get; set; }
-}
-
-class Vector3Int(int x, int y, int z)
-{
-    public int X { get; set; } = x;
-    public int Y { get; set; } = y;
-    public int Z { get; set; } = z;
-
-    private Vector3Int(Vector3Int v) : this(v.X, v.Y, v.Z)
-    {
-    }
-
-    public Vector3Int Clone()
-    {
-        return new Vector3Int(this);
-    }
-
-    public override string ToString()
-    {
-        return $"({X}, {Y}, {Z})";
-    }
-
-    public static Vector3Int operator +(Vector3Int a, Vector3Int b)
-    {
-        return new Vector3Int(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-    }
-
-    public static Vector3Int operator -(Vector3Int a, Vector3Int b)
-    {
-        return new Vector3Int(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-    }
-
-    public static Vector3Int operator *(Vector3Int a, int scalar)
-    {
-        return new Vector3Int(a.X * scalar, a.Y * scalar, a.Z * scalar);
-    }
-
-    public static Vector3Int operator /(Vector3Int a, int scalar)
-    {
-        return new Vector3Int(a.X / scalar, a.Y / scalar, a.Z / scalar);
-    }
-
-    public static double Distance(Vector3Int a, Vector3Int b)
-    {
-        return Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2));
-    }
 }
